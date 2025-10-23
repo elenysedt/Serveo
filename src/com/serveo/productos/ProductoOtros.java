@@ -3,8 +3,8 @@ package com.serveo.productos;
 public class ProductoOtros extends Producto {
     private double descuento; // 0..100
 
-    public ProductoOtros(String nombre, double precio, int stock, double descuento) {
-        super(nombre, precio, stock);
+    public ProductoOtros(String nombre, double precio, int cupos, double descuento) {
+        super(nombre, precio, cupos);
         setDescuento(descuento);
     }
 
@@ -21,4 +21,10 @@ public class ProductoOtros extends Producto {
 
     @Override
     protected String tipo() { return "Otros"; }
+
+    @Override
+    public String reglaPrecio() {
+        return String.format("Otros: se aplica un descuento de %.0f%% (Final = Base × (1 − %.0f%%))",
+                descuento, descuento);
+    }
 }

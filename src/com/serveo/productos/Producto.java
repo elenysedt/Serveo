@@ -1,36 +1,3 @@
-/*package com.serveo.productos;
-
-public class Producto {
-    private static int SEQ = 1;   // contador de IDs compartido por TODA la clase
-
-    private final int id;         // identificador único del producto
-    private String nombre;        // ej: "Instalación de aire acondicionado"
-    private double precio;        // double por consigna
-    private int stock;            // unidades/cupos disponibles
-
-    public Producto(String nombre, double precio, int stock) {
-        this.id = SEQ++;          // asigna y luego incrementa
-        this.nombre = nombre;
-        this.precio = precio;
-        this.stock = stock;
-    }
-
-    // Getters y Setters (encapsulamiento)
-    public int getId() { return id; }
-    public String getNombre() { return nombre; }
-    public double getPrecio() { return precio; }
-    public int getStock() { return stock; }
-
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    public void setPrecio(double precio) { this.precio = precio; }
-    public void setStock(int stock) { this.stock = stock; }
-
-    @Override
-    public String toString() {
-        return String.format("[%d] %s | $%.2f | stock=%d", id, nombre, precio, stock);
-    }
-}*/
-
 package com.serveo.productos;
 
 // Clase ABSTRACTA = Abstracción + base para Herencia
@@ -40,13 +7,13 @@ public abstract class Producto implements Identificable {
     private final int id;     // Encapsulamiento (private)
     private String nombre;    // = descripcion de la consigna
     private double precio;    // base
-    private int stock;
+    private int cupos;
 
-    public Producto(String nombre, double precio, int stock) {
+    public Producto(String nombre, double precio, int cupos) {
         this.id = SEQ++;
         setNombre(nombre);
         setPrecio(precio);
-        setStock(stock);
+        setCupos(cupos);
     }
 
     @Override public int getId() { return id; }
@@ -64,19 +31,24 @@ public abstract class Producto implements Identificable {
         this.precio = precio;
     }
 
-    public int getStock() { return stock; }
-    public void setStock(int stock) {
-        if (stock < 0) throw new IllegalArgumentException("El stock no puede ser negativo.");
-        this.stock = stock;
+    public int getCupos() { return cupos; }
+    public void setCupos(int cupos) {
+        if (cupos < 0) throw new IllegalArgumentException("Los cupos no pueden ser negativos.");
+        this.cupos = cupos;
     }
 
-    // POLIMORFISMO: cada subtipo calcula distinto
     public abstract double precioFinal();
     protected abstract String tipo();
 
+    public abstract String reglaPrecio();
+
+    public String detallePrecio() {
+        return String.format("Base: $%.2f | %s | Final: $%.2f", getPrecio(), reglaPrecio(), precioFinal());
+    }
+
     @Override
     public String toString() {
-        return String.format("[%d] %s | $%.2f | stock=%d | final=$%.2f (%s)",
-                id, nombre, precio, stock, precioFinal(), tipo());
+        return String.format("[%d] %s | cupos=%d | %s (%s)",
+                id, nombre, cupos, detallePrecio(), tipo());
     }
 }

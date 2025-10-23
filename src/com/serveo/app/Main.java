@@ -1,6 +1,6 @@
 package com.serveo.app;
 
-import com.serveo.excepciones.StockInsuficienteException;
+import com.serveo.excepciones.CuposInsuficienteException;
 import com.serveo.pedidos.Pedido;
 import com.serveo.productos.Producto;
 import com.serveo.servicios.PedidoService;
@@ -43,42 +43,42 @@ public class Main {
         System.out.println("¡Gracias! Sistema finalizado.");
     }
 
- private static void imprimirMenu() {
-    System.out.println("\n💡 SERVEO: El servicio que necesitas, cuando lo necesitas 💡");
-    var cu = userService.getCurrentUser();
-    System.out.println("Usuario actual: " + (cu == null ? "(ninguno)" : cu));
-    System.out.println("=================================== SISTEMA DE GESTIÓN - SERVEO ==================================");
+    private static void imprimirMenu() {
+        System.out.println("\n💡 SERVEO: El servicio que necesitas, cuando lo necesitas 💡");
+        var cu = userService.getCurrentUser();
+        System.out.println("Usuario actual: " + (cu == null ? "(ninguno)" : cu));
+        System.out.println(
+                "=================================== SISTEMA DE GESTIÓN - SERVEO ==================================");
 
-    if (cu == null) {
-        System.out.println("""
-                0) Registrar usuario
-                9) Iniciar sesión
-                7) Salir
-                Elija una opción: """);
-        return;
+        if (cu == null) {
+            System.out.println("""
+                    0) Registrar usuario
+                    9) Iniciar sesión
+                    7) Salir
+                    Elija una opción: """);
+            return;
+        }
+
+        if (cu.getRole() == Role.PROVIDER) {
+            System.out.println("""
+                    8) Cerrar sesión
+                    1) Agregar producto
+                    2) Listar productos
+                    3) Buscar/Actualizar producto
+                    4) Eliminar producto
+                    6) Listar pedidos
+                    7) Salir
+                    Elija una opción: """);
+        } else { // CLIENT
+            System.out.println("""
+                    8) Cerrar sesión
+                    2) Listar productos
+                    5) Crear un pedido
+                    6) Listar pedidos
+                    7) Salir
+                    Elija una opción: """);
+        }
     }
-
-    if (cu.getRole() == Role.PROVIDER) {
-        System.out.println("""
-                8) Cerrar sesión
-                1) Agregar producto
-                2) Listar productos
-                3) Buscar/Actualizar producto
-                4) Eliminar producto
-                6) Listar pedidos
-                7) Salir
-                Elija una opción: """);
-    } else { // CLIENT
-        System.out.println("""
-                8) Cerrar sesión
-                2) Listar productos
-                5) Crear un pedido
-                6) Listar pedidos
-                7) Salir
-                Elija una opción: """);
-    }
-}
-
 
     // ---------- Autenticación ----------
     private static void registrarUsuario() {
@@ -120,72 +120,75 @@ public class Main {
         return true;
     }
 
-    // ---------- Productos ----------
-     /*  private static void agregarProducto() {
+    private static void agregarProducto() {
         if (!requireRole(Role.PROVIDER))
             return;
 
         try {
-            System.out.print("Nombre: ");
+            System.out.print("Nombre (servicio): ");
             String nombre = in.nextLine().trim();
-            System.out.print("Precio (double): ");
-            double precio = Double.parseDouble(in.nextLine().trim());
-            System.out.print("Stock (int): ");
-            int stock = Integer.parseInt(in.nextLine().trim());
 
-            Producto p = productoService.agregar(nombre, precio, stock);
+            System.out.print("Precio base (>= 0): ");
+            double precio = Double.parseDouble(in.nextLine().trim());
+            if (precio < 0) {
+                System.out.println("Precio inválido.");
+                return;
+            }
+
+            System.out.print("Cupos (>= 0): ");
+            int cupos = Integer.parseInt(in.nextLine().trim());
+            if (cupos < 0) {
+                System.out.println("Cupos inválidos.");
+                return;
+            }
+
+            System.out.println("Tipo de servicio: 1) Hogar  2) Automotriz  3) Otros");
+            String tipo = in.nextLine().trim();
+
+            Producto p;
+            switch (tipo) {
+                case "1" -> {
+                    System.out.println("Regla Hogar: se suma un recargo fijo al precio base (Final = Base + Recargo).");
+                    System.out.print("Recargo fijo (>= 0): ");
+                    double recargo = Double.parseDouble(in.nextLine().trim());
+                    if (recargo < 0) {
+                        System.out.println("Recargo inválido.");
+                        return;
+                    }
+                    p = productoService.agregarHogar(nombre, precio, cupos, recargo);
+                    System.out.println("🔎 " + p.detallePrecio());
+                }
+                case "2" -> {
+                    System.out.println(
+                            "Regla Automotriz: se aplica un porcentaje extra sobre el precio base (Final = Base × (1 + %)).");
+                    System.out.print("Porcentaje extra (0..100): ");
+                    double extra = Double.parseDouble(in.nextLine().trim());
+                    if (extra < 0 || extra > 100) {
+                        System.out.println("% inválido.");
+                        return;
+                    }
+                    p = productoService.agregarAutomotriz(nombre, precio, cupos, extra);
+                    System.out.println("🔎 " + p.detallePrecio());
+                }
+                default -> {
+                    System.out.println(
+                            "Regla Otros: se aplica un descuento sobre el precio base (Final = Base × (1 − %)).");
+                    System.out.print("Descuento (0..100): ");
+                    double desc = Double.parseDouble(in.nextLine().trim());
+                    if (desc < 0 || desc > 100) {
+                        System.out.println("% inválido.");
+                        return;
+                    }
+                    p = productoService.agregarOtros(nombre, precio, cupos, desc);
+                    System.out.println("🔎 " + p.detallePrecio());
+                }
+            }
             System.out.println("✅ Agregado: " + p);
+
         } catch (NumberFormatException e) {
             System.out.println("❌ Entrada numérica inválida.");
         }
-    }*/
-    private static void agregarProducto() {
-    if (!requireRole(Role.PROVIDER))
-        return;
-
-    try {
-        System.out.print("Nombre (servicio): ");
-        String nombre = in.nextLine().trim();
-
-        System.out.print("Precio base (>= 0): ");
-        double precio = Double.parseDouble(in.nextLine().trim());
-        if (precio < 0) { System.out.println("Precio inválido."); return; }
-
-        System.out.print("Stock (>= 0): ");
-        int stock = Integer.parseInt(in.nextLine().trim());
-        if (stock < 0) { System.out.println("Stock inválido."); return; }
-
-        System.out.println("Tipo de servicio: 1) Hogar  2) Automotriz  3) Otros");
-        String tipo = in.nextLine().trim();
-
-        Producto p;
-        switch (tipo) {
-            case "1" -> {
-                System.out.print("Recargo fijo (>= 0): ");
-                double recargo = Double.parseDouble(in.nextLine().trim());
-                if (recargo < 0) { System.out.println("Recargo inválido."); return; }
-                p = productoService.agregarHogar(nombre, precio, stock, recargo);
-            }
-            case "2" -> {
-                System.out.print("Porcentaje extra (0..100): ");
-                double extra = Double.parseDouble(in.nextLine().trim());
-                if (extra < 0 || extra > 100) { System.out.println("% inválido."); return; }
-                p = productoService.agregarAutomotriz(nombre, precio, stock, extra);
-            }
-            default -> {
-                System.out.print("Descuento (0..100): ");
-                double desc = Double.parseDouble(in.nextLine().trim());
-                if (desc < 0 || desc > 100) { System.out.println("% inválido."); return; }
-                p = productoService.agregarOtros(nombre, precio, stock, desc);
-            }
-        }
-
-        System.out.println("✅ Agregado: " + p);
-    } catch (NumberFormatException e) {
-        System.out.println("❌ Entrada numérica inválida.");
     }
-}
-
 
     private static void listarProductos() {
         List<Producto> list = productoService.listar();
@@ -224,7 +227,8 @@ public class Main {
         }
 
         System.out.println("Encontrado: " + p);
-        System.out.print("¿Actualizar (1) precio, (2) stock, (otro) nada?: ");
+        System.out.println("🔎 " + p.detallePrecio());
+        System.out.print("¿Actualizar (1) precio, (2) cupos, (otro) nada?: ");
         String opt = in.nextLine().trim();
         try {
             if ("1".equals(opt)) {
@@ -243,22 +247,22 @@ public class Main {
                 }
 
             } else if ("2".equals(opt)) {
-                System.out.print("Nuevo stock: ");
-                int nuevoStock = Integer.parseInt(in.nextLine().trim());
-                if (nuevoStock < 0) {
-                    System.out.println("Stock no puede ser negativo.");
+                System.out.print("Nuevos Cupos: ");
+                int nuevoCupos = Integer.parseInt(in.nextLine().trim());
+                if (nuevoCupos < 0) {
+                    System.out.println("Los Cupos no pueden ser negativo.");
                     return;
                 }
 
-                System.out.printf("¿Confirmar actualización del stock de %d a %d? (s/n): ",
-                        p.getStock(), nuevoStock);
+                System.out.printf("¿Confirmar actualización de los cupos de %d a %d? (s/n): ",
+                        p.getCupos(), nuevoCupos);
                 String confirm = in.nextLine().trim();
 
                 if (confirm.equalsIgnoreCase("s")) {
-                    p.setStock(nuevoStock);
-                    System.out.println("✅ Stock actualizado.");
+                    p.setCupos(nuevoCupos);
+                    System.out.println("✅ Cupos actualizados.");
                 } else {
-                    System.out.println("❎ Operación cancelada. El stock no fue modificado.");
+                    System.out.println("❎ Operación cancelada. Los Cupos no fueron modificados.");
                 }
             }
 
@@ -280,7 +284,7 @@ public class Main {
                 System.out.println("❌ No se encontró el producto.");
                 return;
             }
-            System.out.println("Se encontró: " + p); // imprime [id] nombre | $precio | stock
+            System.out.println("Se encontró: " + p); // imprime [id] nombre | $precio | cupos
             System.out.print("¿Seguro que desea eliminar este producto? (s/n): ");
             String conf = in.nextLine().trim();
             if (!conf.equalsIgnoreCase("s")) {
@@ -329,18 +333,29 @@ public class Main {
             }
 
             try {
-                pedidoService.agregarLineaValidandoStock(pedido, prod, cant);
+                System.out.println("🔎 " + prod.detallePrecio());
+                double subtotal = prod.precioFinal() * cant;
+                System.out.printf("Confirmar: %s x%d (Unit: $%.2f) → Subtotal: $%.2f ? (s/n): ",
+                        prod.getNombre(), cant, prod.precioFinal(), subtotal);
+                String conf = in.nextLine().trim();
+                if (!conf.equalsIgnoreCase("s")) {
+                    System.out.println("❎ Línea cancelada.");
+                    continue;
+                }
+
+                pedidoService.agregarLineaValidandoCupos(pedido, prod, cant);
                 System.out.printf("  + Agregado: %s x%d%n", prod.getNombre(), cant);
-            } catch (StockInsuficienteException | IllegalArgumentException e) {
+            } catch (CuposInsuficienteException | IllegalArgumentException e) {
                 System.out.println("❌ " + e.getMessage());
             }
+
         }
 
         try {
-            pedidoService.confirmar(pedido); // descuenta stock
+            pedidoService.confirmar(pedido); // descuenta cupos
             System.out.println("✅ Pedido confirmado:");
             System.out.println(pedido);
-        } catch (StockInsuficienteException e) {
+        } catch (CuposInsuficienteException e) {
             System.out.println("❌ Error al confirmar: " + e.getMessage());
         }
     }
@@ -364,23 +379,21 @@ public class Main {
         userService.register("cli@serveo.com", "1234", Role.CLIENT);
     }
 
-// ---------- Seeds ----------
-private static void seedProducts() {
-    // HOGAR (recargo fijo)
-    productoService.agregarHogar(
-            "Instalación de aire acondicionado (Split)", 45000, 5, 2500);  // recargo visita
-    productoService.agregarHogar(
-            "Electricista domiciliario", 28000, 4, 2000);                  // antes: "Revisión eléctrica domiciliaria"
-    productoService.agregarHogar(
-            "Mantenimiento de aire acondicionado", 30000, 6, 1500);
+    // ---------- Seeds ----------
+    private static void seedProducts() {
 
-    // AUTOMOTRIZ (porcentaje extra)
-    productoService.agregarAutomotriz(
-            "Mecánico - diagnóstico computarizado", 55000, 3, 15);         // +15% por complejidad
+        productoService.agregarHogar(
+                "Instalación de aire acondicionado (Split)", 45000, 5, 2500); // recargo visita
+        productoService.agregarHogar(
+                "Electricista domiciliario", 28000, 4, 2000); // antes: "Revisión eléctrica domiciliaria"
+        productoService.agregarHogar(
+                "Mantenimiento de aire acondicionado", 30000, 6, 1500);
 
-    // OTROS (porcentaje descuento)
-    productoService.agregarOtros(
-            "Profesor de matemáticas a domicilio", 20000, 10, 10);         // 10% descuento promo
-}
+        productoService.agregarAutomotriz(
+                "Mecánico - diagnóstico computarizado", 55000, 3, 15); // +15% por complejidad
+
+        productoService.agregarOtros(
+                "Profesor de matemáticas a domicilio", 20000, 10, 10); // 10% descuento promo
+    }
 
 }

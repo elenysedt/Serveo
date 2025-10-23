@@ -3,8 +3,8 @@ package com.serveo.productos;
 public class ProductoAutomotriz extends Producto {
     private double porcentajeExtra; // 0..100
 
-    public ProductoAutomotriz(String nombre, double precio, int stock, double porcentajeExtra) {
-        super(nombre, precio, stock);
+    public ProductoAutomotriz(String nombre, double precio, int cupos, double porcentajeExtra) {
+        super(nombre, precio, cupos);
         setPorcentajeExtra(porcentajeExtra);
     }
 
@@ -23,4 +23,10 @@ public class ProductoAutomotriz extends Producto {
 
     @Override
     protected String tipo() { return "Automotriz"; }
+
+    @Override
+    public String reglaPrecio() {
+        return String.format("Automotriz: se aplica +%.0f%% sobre el precio base (Final = Base × (1 + %.0f%%))",
+                porcentajeExtra, porcentajeExtra);
+    }
 }

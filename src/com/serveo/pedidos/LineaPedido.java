@@ -7,6 +7,8 @@ public class LineaPedido {
     private final int cantidad;
 
     public LineaPedido(Producto producto, int cantidad) {
+        if (producto == null) throw new IllegalArgumentException("El producto no puede ser null.");
+        if (cantidad <= 0) throw new IllegalArgumentException("La cantidad debe ser mayor que cero.");
         this.producto = producto;
         this.cantidad = cantidad;
     }
@@ -15,7 +17,8 @@ public class LineaPedido {
     public int getCantidad() { return cantidad; }
 
     public double subtotal() {
-        return producto.getPrecio() * cantidad;
+        // Usamos el precio FINAL del producto (incluye recargos/porcentajes/descuentos)
+        return producto.precioFinal() * cantidad;
     }
 
     @Override

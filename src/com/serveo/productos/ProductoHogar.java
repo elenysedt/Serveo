@@ -1,10 +1,10 @@
 package com.serveo.productos;
 
 public class ProductoHogar extends Producto {
-    private double recargo; // >= 0 (ej.: visita)
+    private double recargo; // >= 0 
 
-    public ProductoHogar(String nombre, double precio, int stock, double recargo) {
-        super(nombre, precio, stock);
+    public ProductoHogar(String nombre, double precio, int cupos, double recargo) {
+        super(nombre, precio, cupos);
         setRecargo(recargo);
     }
 
@@ -21,4 +21,9 @@ public class ProductoHogar extends Producto {
 
     @Override
     protected String tipo() { return "Hogar"; }
+
+    @Override
+    public String reglaPrecio() {
+        return String.format("Hogar: se suma un recargo fijo de $%.2f (Final = Base + Recargo)", recargo);
+    }
 }
