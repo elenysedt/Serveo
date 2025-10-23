@@ -121,7 +121,7 @@ public class Main {
     }
 
     // ---------- Productos ----------
-    private static void agregarProducto() {
+     /*  private static void agregarProducto() {
         if (!requireRole(Role.PROVIDER))
             return;
 
@@ -138,7 +138,54 @@ public class Main {
         } catch (NumberFormatException e) {
             System.out.println("❌ Entrada numérica inválida.");
         }
+    }*/
+    private static void agregarProducto() {
+    if (!requireRole(Role.PROVIDER))
+        return;
+
+    try {
+        System.out.print("Nombre (servicio): ");
+        String nombre = in.nextLine().trim();
+
+        System.out.print("Precio base (>= 0): ");
+        double precio = Double.parseDouble(in.nextLine().trim());
+        if (precio < 0) { System.out.println("Precio inválido."); return; }
+
+        System.out.print("Stock (>= 0): ");
+        int stock = Integer.parseInt(in.nextLine().trim());
+        if (stock < 0) { System.out.println("Stock inválido."); return; }
+
+        System.out.println("Tipo de servicio: 1) Hogar  2) Automotriz  3) Otros");
+        String tipo = in.nextLine().trim();
+
+        Producto p;
+        switch (tipo) {
+            case "1" -> {
+                System.out.print("Recargo fijo (>= 0): ");
+                double recargo = Double.parseDouble(in.nextLine().trim());
+                if (recargo < 0) { System.out.println("Recargo inválido."); return; }
+                p = productoService.agregarHogar(nombre, precio, stock, recargo);
+            }
+            case "2" -> {
+                System.out.print("Porcentaje extra (0..100): ");
+                double extra = Double.parseDouble(in.nextLine().trim());
+                if (extra < 0 || extra > 100) { System.out.println("% inválido."); return; }
+                p = productoService.agregarAutomotriz(nombre, precio, stock, extra);
+            }
+            default -> {
+                System.out.print("Descuento (0..100): ");
+                double desc = Double.parseDouble(in.nextLine().trim());
+                if (desc < 0 || desc > 100) { System.out.println("% inválido."); return; }
+                p = productoService.agregarOtros(nombre, precio, stock, desc);
+            }
+        }
+
+        System.out.println("✅ Agregado: " + p);
+    } catch (NumberFormatException e) {
+        System.out.println("❌ Entrada numérica inválida.");
     }
+}
+
 
     private static void listarProductos() {
         List<Producto> list = productoService.listar();
@@ -317,10 +364,23 @@ public class Main {
         userService.register("cli@serveo.com", "1234", Role.CLIENT);
     }
 
-    private static void seedProducts() {
-        // Servicios iniciales (productos)
-        productoService.agregar("Instalación de aire acondicionado (Split)", 45000, 5);
-        productoService.agregar("Revisión eléctrica domiciliaria", 25000, 4);
-        productoService.agregar("Mantenimiento de aire acondicionado", 30000, 6);
-    }
+// ---------- Seeds ----------
+private static void seedProducts() {
+    // HOGAR (recargo fijo)
+    productoService.agregarHogar(
+            "Instalación de aire acondicionado (Split)", 45000, 5, 2500);  // recargo visita
+    productoService.agregarHogar(
+            "Electricista domiciliario", 28000, 4, 2000);                  // antes: "Revisión eléctrica domiciliaria"
+    productoService.agregarHogar(
+            "Mantenimiento de aire acondicionado", 30000, 6, 1500);
+
+    // AUTOMOTRIZ (porcentaje extra)
+    productoService.agregarAutomotriz(
+            "Mecánico - diagnóstico computarizado", 55000, 3, 15);         // +15% por complejidad
+
+    // OTROS (porcentaje descuento)
+    productoService.agregarOtros(
+            "Profesor de matemáticas a domicilio", 20000, 10, 10);         // 10% descuento promo
+}
+
 }
